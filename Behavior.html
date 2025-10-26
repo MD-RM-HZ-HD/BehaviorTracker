@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متتبع المهام والسلوك الأسبوعي</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Droid Arabic Kufi', 'Tahoma', sans-serif;
+            background: rgb(85, 85, 97);
+            min-height: 100vh;
+            padding: 20px;
+            text-align: right;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #c8ecd4;
+            border-radius: 30px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+        }
+        
+        h2 {
+            text-align: center;
+            color: #ee5a6f;
+            margin-bottom: 20px;
+        }
+
+        #tasks-view h2 { /* Specific rule for "المهام" heading in tasks view */
+            color: black;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: rgb(255, 255, 255);
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 5px;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #b1d6ba;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f7f7f7;
+            border-radius: 15px;
+            border: 2px solid #ff6b9d;
+        }
+
+        .controls input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            flex-grow: 1;
+            max-width: 250px;
+            text-align: right;
+        }
+        
+        
+        .file-controls {
+            display: flex; 
+            justify-content: center; 
+            flex-wrap: wrap-reverse; /* To keep the order on wrap */
+            gap: 10px;
+            margin-top: 20px;
+            align-items: center; 
+        }
+        .file-controls button, .file-controls label {
+             background-color: #ffcccc;
+             color: #333;
+             padding: 10px 15px;
+             border-radius: 20px;
+             cursor: pointer;
+             font-size: 1rem;
+             font-weight: bold;
+             font-family: 'Droid Arabic Kufi', 'Tahoma', sans-serif;
+             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+             transition: all 0.3s ease;
+             height: 40px;
+             display: inline-flex;
+             align-items: center;
+             justify-content: center;
+        }
+
+        .file-controls button:hover, .file-controls label:hover {
+            background-color: #ffaaaa;
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .tasks-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            background-color: #ffc4bf;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .tasks-table th, .tasks-table td {
+            padding: 12px 8px;
+            border: 1px solid #eb6161;
+            background-color: #ffc4bf;
+        }
+
+        .tasks-table thead th {
+            background-color: #ee5a6f;
+            color: white;
+            font-weight: bold;
+        }
+
+        .tasks-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .tasks-table tbody tr:hover {
+            background-color: #e6f7ff;
+            transform: scale(1.02);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-applicable {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .task-applicable label {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 0.9em;
+        }
+
+        .select-all-btn {
+            background-color: #ccc;
+            color: black;
+            padding: 5px 10px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .select-all-btn:hover {
+            background-color: #bbb;
+        }
+
+        .select-all-btn.selected {
+            background-color: #1dd1a1;
+            color: black;
+        }
+
+        .select-all-btn.selected:hover {
+            background-color: #10b98a;
+        }
+
+        .select-all-btn.deselected {
+            background-color: #dc3545;
+            color: black;
+        }
+
+        .score-dropdown {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            font-size: 14px;
+            width: 60px;
+        }
+
+        .select-all-btn.deselected:hover {
+            background-color: #c82333;
+        }
+
+        .child-btn {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em; /* Make emojis bigger */
+            padding: 0;
+            margin: 0;
+            box-shadow: none;
+            transition: none;
+        }
+
+        .child-btn:hover {
+            background-color: transparent;
+            transform: scale(1.1);
+        }
+
+        .child-btn.selected {
+            background-color: transparent;
+        }
+
+        .add-task-btn {
+            background-color: #1dd1a1;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 10px; /* Adjust vertical alignment */
+            color: #333; /* Ensure text/emoji is black */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            height: 40px;
+        }
+
+        .add-task-btn:hover {
+            background-color: #ffaaaa;
+            transform: scale(1.05);
+        }
+
+        .controls .add-button {
+            background-color: #007bff;
+        }
+
+        .controls .add-button:hover {
+            background-color: #0056b3;
+        }
+        
+        #weekly-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            background-color: #ffc4bf;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        #weekly-summary-table th, #weekly-summary-table td {
+            padding: 12px 8px;
+            border: 1px solid #eb6161;
+            background-color: #ffc4bf;
+        }
+
+        #weekly-summary-table thead th {
+            background-color: #ee5a6f;
+            color: white;
+            font-weight: bold;
+        }
+
+        #weekly-summary-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        #weekly-summary-table tbody tr:hover {
+            background-color: #e6f7ff;
+            transform: scale(1.02);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .spent-input {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+            border: none;
+            border-radius: 0; /* No rounded corners */
+            font-size: 1rem;
+            background-color: transparent; /* Blend with cell */
+            font-weight: bold; /* Match balance cell font weight */
+            width: 100%;
+            height: 100%;
+            color: black;
+        }
+
+        #weekly-summary-table .spent-column,
+        #weekly-summary-table .balance-column {
+            width: 80px; /* Set a fixed width for both columns */
+        }
+        
+        /* New Styles for Day Tabs */
+        .day-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .day-tab-button {
+            padding: 10px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            flex-grow: 1;
+            background-color: #f7f7f7;
+            color: #333;
+            border: 2px solid #ff6b9d;
+        }
+
+        .day-tab-button.active {
+            background-color: #ff6b9d;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 107, 157, 0.4);
+        }
+
+        .day-tab-button.today {
+            background-color: #45a049;
+            color: black;
+            font-weight: bold;
+            border: 2px solid #8B0000;
+        }
+
+        .day-tab-button.today.active {
+            background-color: #ff6b9d;
+            border: 2px solid #e91e63;
+        }
+
+        /* New Styles for Day Content */
+        .day-content-wrapper {
+            background-color: #cfcacb9d;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(37, 36, 36, 0.05);
+            border: 2px solid #006400;
+        }
+
+        .child-day-record {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border: 2px solid #228B22;
+            border-radius: 10px;
+            padding: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .child-day-record:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .child-day-record:last-child {
+            margin-bottom: 0;
+        }
+
+        .child-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 5px;
+            transition: padding 0.3s ease;
+        }
+
+        .child-header.compact {
+            padding: 1px;
+        }
+        
+        .child-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ee5a6f;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 10px;
+        }
+
+        .child-name:hover {
+            background-color: #e8f4f8;
+        }
+
+        .child-name.expanded {
+            background-color: #d1ecf1;
+            font-weight: bold;
+        }
+
+        .child-score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            background-color: #dc143c;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+        }
+
+        .child-daily-score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            background-color: #ffffff;
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 15px;
+            border: 2px solid #8B0000;
+        }
+
+        .scores {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .task-cell {
+            padding: 10px;
+            border-radius: 10px;
+            background-color: #94a3a1; /* A slightly darker, more noticeable grey */
+            border: 1px solid #d1d5db; /* Matching grey border */
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-size: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .task-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .task-cell.completed {
+            background-color: #1dd1a1;
+            color: black;
+            font-weight: bold;
+        }
+        .task-cell.great-day {
+            background-color: #feca57;
+            color: #333;
+            font-weight: bold;
+        }
+        .task-cell.negative-score {
+            background-color: #ffc4bf; /* Light red background for negative scores */
+            color: #b91c1c;           /* Dark red text for contrast */
+            font-weight: bold;
+        }
+
+        .app-footer {
+            margin-top: 30px;
+            text-align: center;
+            padding: 15px 0;
+            border-top: 2px solid #ddd;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .app-footer button {
+            background-color: #dc143c;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .app-footer button.active-view {
+             background-color: #ff6b9d;
+             color: white;
+        }
+
+        .view-section {
+            padding: 10px 0;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 15px;
+        }
+        
+        .removable-tasks-section {
+            margin-top: 0;
+            padding: 0; /* Remove padding */
+            background-color: transparent; /* Make background transparent */
+            border: none; /* Remove border */
+        }
+        
+        .removable-tasks-section h3 {
+            color: #ee5a6f;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #ee5a6f;
+            padding-bottom: 10px;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s;
+        }
+
+        .modal-overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: rgba(63, 73, 67, 0.9); /* Transparent light green from container */
+            background: rgb(112, 109, 109); /* Light grey semi-transparent background */
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #ff6b9d;
+        }
+
+        .time-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .time-button {
+            background-color: #dc143c;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .time-button.selected {
+            background-color: #007bff;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .modal-content button.confirm-button {
+            background-color: #ccc; /* Match cancel button */
+            font-weight: bold; /* Added bold font weight */
+            font-size: 1.1rem;
+            color: black; /* Changed font color to black */
+        }
+        .modal-content button.cancel-button {
+            background-color: #ccc;
+            font-weight: bold; /* Added bold font weight */
+            font-size: 1.1rem;
+            color: black; /* Changed font color to black */
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .score-display-btn {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: black;
+            width: 60px;
+            height: 40px;
+            background-color: #ccc; /* Match other modal buttons */
+        }
+
+        .task-option-btn.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .task-option-btn {
+            width: 60px;
+            height: 60px;
+            padding: 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%; /* Make it a circle */
+            border: 2px solid #ccc; /* Add grey circle around */
+        }
+
+        /* New styles for progress bar selection */
+        .progress-bar-container {
+            display: flex;
+            width: 100%;
+            height: 45px;
+            cursor: pointer;
+            border-radius: 25px; /* Rounded corners for the whole bar */
+            overflow: hidden; /* Clip segments to the container's shape */
+            border: 2px solid #bdc3c7; /* Border for the whole bar */
+        }
+
+        .progress-segment {
+            flex: 1;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-weight: bold;
+        }
+
+        .progress-segment:hover {
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+
+        .progress-bar-container.green .progress-segment {
+            background-color: #a7f3d0; /* Light Green */
+        }
+        .progress-bar-container.green .progress-segment.selected {
+            background-color: #10b981; /* Dark Green */
+        }
+        .progress-bar-container.green .progress-segment.preview-selected {
+            background-color: #6ee7b7; /* Brighter Green for preview */
+        }
+
+        .progress-bar-container.red .progress-segment {
+            background-color: #fca5a5; /* Light Red */
+        }
+        .progress-bar-container.red .progress-segment.selected {
+            background-color: #ef4444; /* Dark Red */
+        }
+        .progress-bar-container.red .progress-segment.preview-selected {
+            background-color: #f87171; /* Brighter Red for preview */
+        }
+        /* Styles for the new Task Options Modal */
+        .task-options-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .task-options-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .task-options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .task-options-section .green-btn {
+            background-color: #a7f3d0; /* Light Green */
+            color: white;
+        }
+        .task-options-section .green-btn.selected {
+            background-color: #10b981; /* Dark Green */
+        }
+
+        .task-options-section .red-btn {
+            background-color: #fca5a5; /* Light Red */
+            color: white;
+        }
+        .task-options-section .red-btn.selected {
+            background-color: #ef4444; /* Dark Red */
+        }
+
+        .time-select-btn {
+            color: black;
+            font-weight: bold;
+            font-size: 1.1rem;
+            width: 100%;
+            background-color: #fde68a;
+        }
+        .time-select-btn:hover {
+            background-color: #fcd34d;
+        }
+
+        #time-picker-input {
+            width: 100%;
+            padding: 10px;
+            border: none; /* Remove border */
+            border-radius: 10px;
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 15px;
+            background-color: rgb(112, 109, 109); /* Match modal background */
+            color: black; /* Black font color */
+            font-weight: bold; /* Bold font weight */
+            font-family: 'Droid Arabic Kufi', 'Tahoma', sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app-container">
+        <h1>مُتَتَبِعُ المَهَامِ</h1>
+        
+        <div id="daily-tracker-view" class="view-section">
+            <div class="day-tabs" id="dayTabsContainer"></div> 
+            <div class="day-content-wrapper" id="dayContentWrapper"></div>
+        </div>
+
+        <div id="weekly-summary-view" class="view-section" style="display: none;">
+            <div id="chart-wrapper" class="chart-wrapper">
+            </div>
+        </div>
+
+        <div id="tasks-view" class="view-section" style="display: none;">
+
+            <h2>المهام</h2> <div id="removable-tasks-container" class="removable-tasks-section"> 
+                <div class="table-wrapper"></div> 
+            </div>
+            <div class="file-controls">
+                <button class="add-task-btn" onclick="addNewTask()">➕ إضافة مهمة جديدة</button>
+                <button onclick="downloadChart()">💾 حفظ البيانات</button>
+                <label for="file-upload">📂 تحميل البيانات</label>
+                <input type="file" id="file-upload" accept=".json" onchange="handleFileUpload(event)" style="display: none;">
+                <button onclick="resetChart()">🗑️ إعادة تعيين الكل</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="custom-alert-box" class="modal-overlay" style="z-index: 1100;">
+        <div class="modal-content" style="max-width: 300px;">
+            <p id="custom-alert-message" style="color: #333; font-weight: bold; margin-bottom: 15px;"></p>
+            <button onclick="document.getElementById('custom-alert-box').classList.remove('visible');" class="confirm-button">حسناً</button>
+        </div>
+    </div>
+
+    <div id="task-options-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <div class="task-options-section">
+                <div class="progress-bar-container green" id="green-progress-bar">
+                    </div>
+            </div>
+            <div class="task-options-section">
+                <div class="progress-bar-container red" id="red-progress-bar">
+                    </div>
+            </div>
+            <div class="task-options-section">
+                <div class="time-picker-grid" style="grid-template-columns: 1fr auto; align-items: center;">
+                    <input type="time" id="time-picker-input" style="margin-bottom: 0;">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="confirm-button" onclick="confirmTaskOptions()">تأكيد</button>
+                <button class="cancel-button" onclick="hideTaskOptionsModal()">إلغاء</button>
+                <button class="cancel-button" onclick="resetTaskOptions()">إعادة تعيين</button>
+                <button id="task-score-display" class="score-display-btn" disabled>0</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-footer">
+        <button onclick="showView('daily-tracker')" id="daily-tracker-btn">تتبع المهام اليومية</button>
+        <button onclick="showView('weekly-summary')" id="weekly-summary-btn">ملخص الأداء الأسبوعي</button>
+
+        <button onclick="showView('tasks')" id="tasks-btn" style="display: none;">إدارة المهام</button>
+    </div>
+
+    <script>
+        function showCustomAlert(message) {
+            const alertBox = document.getElementById('custom-alert-box');
+            const alertMessage = document.getElementById('custom-alert-message');
+            alertMessage.textContent = message;
+            alertBox.classList.add('visible');
+        }
+        
+        const ARABIC_DAYS = ['الجمعة', 'السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
+
+        const TASK_ICONS = {
+            'تنظيف الأسنان': '🦷', // This is a standard emoji
+            'الاستحمام وجمع الغسيل': '🚿🧺',
+            'الدراسة/الواجبات': '📚',
+            'الصلاة / قراءة القرآن': '🕌', // This is a standard emoji
+            'التعاون': '🤝',
+            'السلوك الجيد': '🎁', 
+            'الامتياز': '⭐⭐',
+            'مهمة إضافية': '✅',
+            'التنظيف': '🧹',
+            'غسل الثياب': '🧺',
+            'غسل الأواني': '🧼',
+            'النوم': '⏰'
+        };
+
+        let children = ['فاطمة', 'زينب', 'مريم', 'محمد', 'كوثر'];
+        let tasks = Object.keys(TASK_ICONS);
+        let chartData = {};
+        let taskApplicability = {}; // Stores applicability of tasks per child
+        // State variables for the task options modal
+        let currentView = 'daily-tracker';
+        let currentTaskChild = null;
+        let currentTaskDay = null;
+        let currentTaskName = null;
+        let currentTaskSelections = [];
+        let activeDay = null;
+        let expandedChildren = {}; // لتتبع الأطفال الموسعين لكل يوم
+        
+        function getWeekDates() {
+            const today = new Date();
+            const targetDay = 5; 
+            const currentDay = today.getDay(); 
+
+            let diff = currentDay - targetDay;
+            if (diff < 0) diff += 7;
+
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - diff);
+            weekStart.setHours(0, 0, 0, 0);
+
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(weekStart);
+                date.setDate(weekStart.getDate() + i);
+                weekDates.push(date);
+            }
+            return weekDates;
+        }
+        
+        const weekDates = getWeekDates();
+
+        function getCurrentDayArabic() {
+            const today = new Date().getDay();
+            const arabicIndex = (today >= 5 ? today - 5 : today + 2); 
+            return ARABIC_DAYS[arabicIndex];
+        }
+
+// -------------------------------------------------------------------------------------------------
+// ⭐⭐ الإضافة الأولى: كود ربط Google Sheets عبر Google Apps Script Web App ⭐⭐
+// -------------------------------------------------------------------------------------------------
+
+// ⚠️ يجب تغيير هذا الرابط إلى رابط الـ Web App الذي حصلت عليه من Google Apps Script (الخطوة الرابعة من الإعداد)
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyt4PvBYU_5QUOxDGOAxu1QDOIqDx1DBChkBFR0ruu5af847b7jSszTUxbmWRv-elw/exec'; 
+
+
+function sendDataToGoogleSheets() {
+    // تحقق من تهيئة الرابط
+    if (!WEB_APP_URL || WEB_APP_URL.includes('ضع رابط الـ Web App')) {
+        console.warn('Google Sheets Web App URL is not configured. Data is only saved locally.');
+        showCustomAlert("⚠️ تم الحفظ محلياً فقط. رابط Google Sheets غير صحيح أو غير مُهيأ.");
+        return;
+    }
+
+    // تجهيز البيانات للإرسال. نرسل البيانات الرئيسية التي يحتاجها السكربت.
+    const dataToSend = {
+        chartData: chartData,
+        children: children,
+        tasks: tasks 
+    };
+
+    fetch(WEB_APP_URL, {
+        method: 'POST',
+        // استخدام 'no-cors' ضروري لتجاوز قيود الأمان للمتصفح عند العمل بملف HTML محلي
+        mode: 'no-cors', 
+        // يجب أن يكون Content-Type: text/plain لكي يتمكن Apps Script من قراءة الجسم (body) بشكل صحيح
+        headers: {
+            'Content-Type': 'text/plain;charset=utf-8', 
+        },
+        body: JSON.stringify(dataToSend),
+    })
+    .then(response => {
+        // بسبب استخدام 'no-cors'، لن نتمكن من قراءة محتوى الرد هنا، لكننا نعرف أن الطلب أُرسل
+        console.log('✅ Data sent to Google Sheets Web App.');
+        //showCustomAlert("✅ تم حفظ البيانات على Google Sheets و محلياً!");
+    })
+    .catch(error => {
+        console.error('❌ Error sending data to Google Sheets:', error);
+        showCustomAlert("❌ فشل إرسال البيانات إلى Google Sheets. تم الحفظ محلياً فقط.");
+    });
+}
+// -------------------------------------------------------------------------------------------------
+
+
+        function initializeData() {
+            tasks = Object.keys(TASK_ICONS); // Ensure tasks list is always up-to-date
+            const isNewData = Object.keys(chartData).length === 0 || !localStorage.getItem('weeklyChartData');
+
+            if (isNewData) chartData = {};
+            
+            children.forEach(child => {
+                chartData[child] = chartData[child] || {};
+                // Ensure weekly summary object exists for each child
+                chartData[child].weeklySummary = chartData[child].weeklySummary || { spent: '' };
+                ARABIC_DAYS.forEach((day, index) => {
+                    const dateKey = weekDates[index].toISOString().split('T')[0];
+                    chartData[child][day] = chartData[child][day] || {
+                        tasks: [],
+                        date: dateKey,
+                        bedtime: null
+                    };
+                    
+                    const dayData = chartData[child][day];
+                    const existingTaskNames = dayData.tasks.map(t => t.name);
+                    
+                    tasks.forEach(newTask => {
+                        if (!existingTaskNames.includes(newTask)) {
+                            dayData.tasks.push({ name: newTask, completed: false, score: 0 });
+                        } else {
+                            const taskIndex = dayData.tasks.findIndex(t => t.name === newTask);
+                             if (taskIndex !== -1) {
+                                if (isNewData) dayData.tasks[taskIndex].completed = false;
+                                // Data migration for older saves
+                                if (dayData.tasks[taskIndex].score === undefined) {
+                                    dayData.tasks[taskIndex].score = dayData.tasks[taskIndex].completed ? 0.5 : 0;
+                                } 
+                                if (dayData.tasks[taskIndex].time === undefined) dayData.tasks[taskIndex].time = null;
+                                if (dayData.tasks[taskIndex].selections === undefined) dayData.tasks[taskIndex].selections = [];
+                             }
+                        }
+                    });
+                    // Set default applicability for all tasks for this child
+                    tasks.forEach(task => getTaskApplicability(task, child));
+                    
+                    dayData.tasks = dayData.tasks.filter(t => tasks.includes(t.name));
+                });
+            });
+            saveDataToLocalStorage();
+        }
+
+// -------------------------------------------------------------------------------------------------
+// ⭐⭐ التعديل الثاني: دالة saveDataToLocalStorage المُعدَّلة لاستدعاء دالة الإرسال ⭐⭐
+// -------------------------------------------------------------------------------------------------
+        function saveDataToLocalStorage() {
+            // 1. الحفظ المحلي (الكود الأصلي)
+            localStorage.setItem('weeklyChartData', JSON.stringify(chartData));
+            localStorage.setItem('childrenList', JSON.stringify(children));
+            localStorage.setItem('tasksList', JSON.stringify(tasks));
+            localStorage.setItem('taskApplicability', JSON.stringify(taskApplicability));
+            
+            // 2. إرسال البيانات إلى Google Sheets (الإضافة الجديدة)
+            sendDataToGoogleSheets(); 
+        }
+// -------------------------------------------------------------------------------------------------
+
+
+        function loadDataFromLocalStorage() {
+            const savedData = localStorage.getItem('weeklyChartData');
+            const savedChildren = localStorage.getItem('childrenList');
+            const savedTasks = localStorage.getItem('tasksList');
+            const savedApplicability = localStorage.getItem('taskApplicability');
+
+            if (savedData) {
+                chartData = JSON.parse(savedData);
+                children = savedChildren ? JSON.parse(savedChildren) : Object.keys(chartData);
+                tasks = savedTasks ? JSON.parse(savedTasks) : Object.keys(TASK_ICONS); // Keep this for backward compatibility
+                taskApplicability = savedApplicability ? JSON.parse(savedApplicability) : {};
+            }
+
+            const defaultChildrenSet = new Set(['فاطمة', 'زينب', 'مريم', 'محمد', 'كوثر', 'زهراء']);
+            children = Array.from(new Set([...children, ...Array.from(defaultChildrenSet)]));
+            // Move زهراء to the end
+            const zahraIndex = children.indexOf('زهراء');
+            if (zahraIndex !== -1) {
+                children.splice(zahraIndex, 1);
+                children.push('زهراء');
+            }
+            
+            initializeData();
+        }
+
+        function switchDay(day) {
+            activeDay = day;
+            renderDayTabs(activeDay);
+            renderDayContent(activeDay);
+        }
+        
+        function renderDayTabs(currentActiveDay) {
+            const container = document.getElementById('dayTabsContainer');
+            container.innerHTML = '';
+            const todayName = getCurrentDayArabic();
+            ARABIC_DAYS.forEach((day, index) => {
+                const date = weekDates[index];
+                const formattedDate = `${date.getDate()}/${date.getMonth() + 1}`;
+                const button = document.createElement('button');
+                button.className = 'day-tab-button';
+                if (day === todayName) {
+                    button.classList.add('today');
+                }
+                button.innerHTML = `${day} <br><span style="font-size: 0.8em; font-weight: normal;">(${formattedDate})</span>`;
+                if (day === currentActiveDay) {
+                    button.classList.add('active');
+                }
+                button.onclick = () => switchDay(day);
+                container.appendChild(button);
+            });
+        }
+        
+        function toggleChildExpansion(childName, day) {
+            if (expandedChildren[day] === childName) {
+                delete expandedChildren[day];
+            } else {
+                expandedChildren[day] = childName;
+            }
+            renderDayContent(day);
+        }
+
+        function renderDayContent(day) {
+            const wrapper = document.getElementById('dayContentWrapper');
+            wrapper.innerHTML = '';
+
+            children.forEach(child => {
+                const childData = chartData[child][day];
+                if (!childData) return;
+
+                const childRecordDiv = document.createElement('div');
+                childRecordDiv.className = 'child-day-record';
+                
+                // ⭐ تم التعديل: تفعيل الطي والتوسع ثنائي الاتجاه على الحاوية
+               //childRecordDiv.onclick = () => toggleChildExpansion(child, day); 
+				childRecordDiv.onclick = () => {
+					// إذا لم يكن الطفل موسعاً، قم بتوسيعه (يمنع الطي إذا ضغطت مرة أخرى)
+					if (expandedChildren[day] !== child) {
+						toggleChildExpansion(child, day);
+					}
+				};
+                // Calculate weekly total based on applicable tasks
+                let weeklyTotal = 0;
+                ARABIC_DAYS.forEach(d => {
+                    if (chartData[child] && chartData[child][d]) {
+                        weeklyTotal += chartData[child][d].tasks.reduce((sum, t) => sum + (getTaskApplicability(t.name, child) ? (Number(t.score) || 0) : 0), 0);
+                    }
+                });
+
+                const isExpanded = expandedChildren[day] === child;
+                const expandedClass = isExpanded ? 'expanded' : '';
+                const compactClass = isExpanded ? '' : 'compact';
+                const displayStyle = isExpanded ? '' : 'display: none;';
+
+                // Calculate daily total based on applicable tasks
+                const dailyTotal = childData.tasks.reduce((sum, t) => sum + (getTaskApplicability(t.name, child) ? (Number(t.score) || 0) : 0), 0);
+                childRecordDiv.innerHTML = `
+                    <div class="child-header ${compactClass}">
+                        <span class="child-name ${expandedClass}" onclick="event.stopPropagation(); toggleChildExpansion('${child}', '${day}')">${child}</span>
+                        <div class="scores">
+                            <span class="child-daily-score">${dailyTotal}</span>
+                            <span class="child-score">${weeklyTotal}</span>
+                        </div>
+                    </div>
+                    <div class="tasks-grid" style="${displayStyle}"></div>
+                `;
+
+                const tasksGrid = childRecordDiv.querySelector('.tasks-grid');
+
+                tasks.forEach(taskName => {
+                    // Only render tasks that are applicable to the child
+                    if (!getTaskApplicability(taskName, child)) {
+                        return;
+                    }
+
+                    const task = childData.tasks.find(t => t.name === taskName);
+                    if (!task) return;
+
+                    const taskCell = document.createElement('div');
+                    taskCell.className = 'task-cell';
+                    
+                    // Apply class based on score
+                    if (task.score < 0) {
+                        taskCell.classList.add('negative-score');
+                    } else if (task.score > 0) {
+                        taskCell.classList.add('completed');
+                    } 
+                    
+                    const taskIcon = TASK_ICONS[taskName] || '❓';
+                    
+                    if (taskName === 'النوم') {
+                        if (task.completed) taskCell.classList.add('great-day');
+                    }
+                        const taskTimeText = task.time ? `(${task.time})` : '';
+                        taskCell.innerHTML = `<span>${taskIcon}</span><span>${taskName} ${taskTimeText}</span>`; 
+                        taskCell.onclick = () => showTaskOptionsModal(child, day, taskName);
+                    tasksGrid.appendChild(taskCell);
+                });
+                
+                wrapper.appendChild(childRecordDiv);
+            });
+        }
+
+        function renderRemovableTasks() {
+            const tableWrapper = document.getElementById('removable-tasks-container').querySelector('.table-wrapper');
+            let html = ''; // Removed '<h3>المهام</h3>' from here
+            html += '<table class="tasks-table"><thead><tr><th>المهمة</th>';
+
+            children.forEach(child => {
+                html += `<th>${child}</th>`;
+            });
+
+            html += '<th>ALL</th></tr></thead><tbody>';
+
+            Object.keys(TASK_ICONS).forEach(task => {
+                const icon = TASK_ICONS[task];
+                html += `<tr>
+                            <td style="text-align: right; font-weight: bold; color: black;">${icon} ${task}</td>`;
+
+                children.forEach(child => {
+                    const isApplicable = getTaskApplicability(task, child);
+                    const btnClass = isApplicable ? 'selected' : '';
+                    html += `<td><button class="child-btn ${btnClass}" onclick="toggleTaskApplicability('${task}', '${child}')">${isApplicable ? '✅' : '❌'}</button></td>`;
+                });
+
+                const allSelected = children.every(child => getTaskApplicability(task, child));
+                const allDeselected = children.every(child => !getTaskApplicability(task, child));
+                let selectAllClass = '';
+                if (allSelected) selectAllClass = 'selected';
+                else if (allDeselected) selectAllClass = 'deselected';
+                // Change button text based on state
+                const buttonText = (allSelected || allDeselected) ? 'ALL' : '🅰️';
+                html += `<td><button class="select-all-btn ${selectAllClass}" onclick="selectAllForTask('${task}')">${buttonText}</button></td>`;
+
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            tableWrapper.innerHTML = html;
+        }
+
+        function getTaskApplicability(task, child) {
+            if (!taskApplicability[task]) taskApplicability[task] = {};
+            // If a value is not explicitly set, apply default rules
+            if (typeof taskApplicability[task][child] === 'undefined') {
+                if (task === 'الامتياز') {
+                    // This task is now applicable to everyone by default.
+                    taskApplicability[task][child] = true;
+                } else if (task === 'الدراسة/الواجبات' && child === 'زهراء') {
+                    taskApplicability[task][child] = false;
+                } else if (task === 'التنظيف' && child === 'زهراء') {
+                    taskApplicability[task][child] = false;
+                }
+                else if (task === 'غسل الثياب') {
+                    // Only applicable for فاطمة
+                    taskApplicability[task][child] = (child === 'فاطمة'); 
+                } else if (task === 'غسل الأواني' && (child === 'زهراء' || child === 'كوثر')) {
+                    taskApplicability[task][child] = false;
+                } else {
+                    // Default for all other tasks is applicable
+                    taskApplicability[task][child] = true; 
+                }
+            }
+            return taskApplicability[task][child];
+        }
+
+        function toggleTaskApplicability(task, child) {
+            if (!taskApplicability[task]) taskApplicability[task] = {};
+            taskApplicability[task][child] = !getTaskApplicability(task, child);
+            saveDataToLocalStorage();
+            renderRemovableTasks();
+        }
+
+        function selectAllForTask(task) {
+            const allSelected = children.every(child => getTaskApplicability(task, child));
+            if (!taskApplicability[task]) taskApplicability[task] = {};
+            children.forEach(child => {
+                taskApplicability[task][child] = !allSelected;
+            });
+            saveDataToLocalStorage();
+            renderRemovableTasks();
+        }
+
+        function addNewTask() {
+            const newTask = prompt('أدخل اسم المهمة الجديدة:');
+            if (newTask && newTask.trim()) {
+                const newIcon = prompt('أدخل رمز المهمة (مثل 🦷):');
+                if (newIcon) {
+                    TASK_ICONS[newTask.trim()] = newIcon;
+                    tasks.push(newTask.trim());
+                    initializeData();
+                    renderRemovableTasks();
+                    showCustomAlert(`تمت إضافة المهمة: ${newTask}`);
+                }
+            }
+        }
+
+        function updateSpent(child, value) {
+            // Ensure weeklySummary exists
+            if (!chartData[child].weeklySummary) {
+                chartData[child].weeklySummary = { spent: 0 };
+            }
+            chartData[child].weeklySummary.spent = value; // Store the raw string value
+            saveDataToLocalStorage();
+            updateBalanceCell(child); // Update only the balance cell
+        }
+
+        function updateBalanceCell(child) {
+            const table = document.getElementById('weekly-summary-table');
+            if (!table) return;
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const childNameCell = row.querySelector('td[data-child-name]');
+                if (childNameCell && childNameCell.textContent === child) {
+                    const totalScore = Number(row.querySelector('td:nth-last-child(3)').textContent) || 0;
+                    const spentValue = chartData[child]?.weeklySummary?.spent || '';
+                    const spentAmountForCalc = Number(spentValue) || 0;
+                    const balance = totalScore - spentAmountForCalc;
+                    row.querySelector('td:last-child').textContent = balance;
+                }
+            });
+        }
+
+        function renderWeeklySummaryTable() {
+            const chartWrapper = document.getElementById('chart-wrapper');
+            let html = '<div class="table-wrapper"><table id="weekly-summary-table" dir="rtl"><thead><tr>';
+
+            html += '<th>اسم الطفل</th>';
+            ARABIC_DAYS.forEach(day => {
+                html += `<th>${day}</th>`;
+            });
+            html += '<th class="total-column">المجموع</th>';
+            html += '<th class="spent-column">صرف</th>';
+            html += '<th class="balance-column">الباقي</th>';
+
+            html += '</tr></thead><tbody>';
+
+            children.forEach(child => {
+                let totalScore = 0;
+                let dailyCells = '';
+
+                ARABIC_DAYS.forEach(day => {
+                    if (chartData[child] && chartData[child][day]) {
+                        const data = chartData[child][day];
+                        // Calculate score based on applicable tasks only
+                        const dailyScore = data.tasks.reduce((sum, t) => sum + (getTaskApplicability(t.name, child) ? (Number(t.score) || 0) : 0), 0);
+
+                        totalScore += dailyScore;
+                        dailyCells += `<td>${dailyScore}</td>`;
+                    } else {
+                        dailyCells += `<td>0</td>`;
+                    }
+                });
+
+                const spentValue = chartData[child]?.weeklySummary?.spent || '';
+                const spentAmount = Number(spentValue) || 0;
+                const balance = totalScore - spentAmount;
+                html += `<tr>
+                            <td style="text-align: center; font-weight: bold; color: black;" data-child-name="${child}">${child}</td>
+                            ${dailyCells}
+                            <td class="total-column" style="font-weight: bold; background-color: #1dd1a1; color: black;">${totalScore}</td>
+                            <td class="spent-column" style="background-color: #cccccc; padding: 0;"><input type="text" inputmode="decimal" class="spent-input" value="${spentValue}" oninput="updateSpent('${child}', this.value)"></td>
+                            <td class="balance-column" style="font-weight: bold; background-color: #fde68a; color: black;">${balance}</td>
+                         </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            chartWrapper.innerHTML = html;
+        }
+
+        function addChild() {
+            const input = document.getElementById('child-name-input');
+            const name = input.value.trim();
+            if (name && !children.includes(name)) {
+                children.push(name);
+                input.value = '';
+                initializeData();
+                showCustomAlert(`تمت إضافة الطفل: ${name}`);
+                if (currentView === 'daily-tracker') renderDayContent(activeDay);
+                if (currentView === 'weekly-summary') renderWeeklySummaryTable();
+            } else if (name) {
+                 showCustomAlert("الاسم موجود بالفعل أو غير صالح.");
+            }
+        }
+
+        function showView(view) {
+            currentView = view;
+
+            document.getElementById('daily-tracker-view').style.display = 'none';
+            document.getElementById('weekly-summary-view').style.display = 'none';
+            document.getElementById('tasks-view').style.display = 'none';
+
+            document.getElementById('daily-tracker-btn').classList.remove('active-view');
+            document.getElementById('weekly-summary-btn').classList.remove('active-view');
+            document.getElementById('tasks-btn').classList.remove('active-view');
+
+            if (view === 'daily-tracker') {
+                document.getElementById('daily-tracker-view').style.display = 'block';
+                document.getElementById('daily-tracker-btn').classList.add('active-view');
+                switchDay(activeDay || getCurrentDayArabic());
+            } else if (view === 'weekly-summary') {
+                document.getElementById('weekly-summary-view').style.display = 'block';
+                document.getElementById('weekly-summary-btn').classList.add('active-view');
+                renderWeeklySummaryTable();
+            } else if (view === 'tasks') {
+                document.getElementById('tasks-view').style.display = 'block';
+                document.getElementById('tasks-btn').classList.add('active-view');
+                renderRemovableTasks();
+            }
+        }
+        
+        function showTaskOptionsModal(child, day, taskName) {
+            currentTaskChild = child;
+            currentTaskDay = day;
+            currentTaskName = taskName;
+            currentTaskSelections = []; // Reset selections
+
+            // Generate progress bar segments
+            const greenBar = document.getElementById('green-progress-bar');
+            const redBar = document.getElementById('red-progress-bar');
+            greenBar.innerHTML = '';
+            redBar.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const greenSegment = document.createElement('div');
+                greenSegment.className = 'progress-segment';
+                greenSegment.dataset.value = 0.5;
+                greenSegment.onmouseover = () => previewTaskOption(greenSegment);
+                greenSegment.onmouseout = () => clearPreviewTaskOption(greenSegment);
+                greenSegment.onclick = () => toggleTaskOption(greenSegment);
+                greenBar.appendChild(greenSegment);
+
+                const redSegment = document.createElement('div');
+                redSegment.className = 'progress-segment';
+                redSegment.dataset.value = -0.5;
+                redSegment.onmouseover = () => previewTaskOption(redSegment);
+                redSegment.onmouseout = () => clearPreviewTaskOption(redSegment);
+                redSegment.onclick = () => toggleTaskOption(redSegment);
+                redBar.appendChild(redSegment);
+            }
+
+            const modal = document.getElementById('task-options-modal-overlay');
+            const timeInput = document.getElementById('time-picker-input');
+
+            // Update time button text
+            const task = chartData[child][day].tasks.find(t => t.name === taskName);
+            
+            // Set time input
+            if (task.time && task.time !== 'Not Recorded') {
+                const parts = task.time.match(/(\d+):(\d+)\s*(ص|م)/i);
+                if (parts) {
+                    let [_, hours, minutes, period] = parts;
+                    hours = parseInt(hours, 10);
+                    if (period === 'م' && hours < 12) hours += 12;
+                    if (period === 'ص' && hours === 12) hours = 0;
+                    timeInput.value = `${String(hours).padStart(2, '0')}:${minutes}`;
+                }
+            } else {
+                const now = new Date();
+                let hours = now.getHours();
+                let minutes = now.getMinutes();
+                minutes = Math.round(minutes / 5) * 5;
+                if (minutes === 60) {
+                    minutes = 0;
+                    hours = (hours + 1) % 24;
+                }
+                timeInput.value = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            }
+
+            // Restore previous selections
+            if (task && task.selections && task.selections.length > 0) {
+                const greenSegments = greenBar.querySelectorAll('.progress-segment');
+                const redSegments = redBar.querySelectorAll('.progress-segment');
+                let greenCount = 0;
+                let redCount = 0;
+
+                task.selections.forEach(value => {
+                    if (value > 0 && greenCount < greenSegments.length) {
+                        toggleTaskOption(greenSegments[greenCount], true);
+                        greenCount++;
+                    } else if (value < 0 && redCount < redSegments.length) {
+                        toggleTaskOption(redSegments[redCount], true);
+                        redCount++;
+                    }
+                });
+            }
+            updateScoreDisplay(); // Update score display based on restored selections
+
+            modal.classList.add('visible');
+        }
+
+        function hideTaskOptionsModal() {
+            document.getElementById('task-options-modal-overlay').classList.remove('visible');
+        }
+        
+        function clearTaskTime() {
+            const timeInput = document.getElementById('time-picker-input');
+            timeInput.value = '';
+        }
+
+        function toggleTaskOption(segment, isInitialLoad = false) {
+            const bar = segment.parentElement;
+            const segments = Array.from(bar.children);
+            const segmentIndex = segments.indexOf(segment);
+            const isSelected = segment.classList.contains('selected');
+
+            // Logic for selection/deselection
+            const lastSelectedIndex = segments.reduce((last, current, index) => (current.classList.contains('selected') ? index : last), -1);
+
+            if (isSelected && segmentIndex === lastSelectedIndex) {
+                // If clicking the rightmost selected segment, deselect all in this bar
+                segments.forEach(s => s.classList.remove('selected'));
+            } else if (isInitialLoad) {
+                // During initial load, just select the segment without clearing others in the same bar
+                segment.classList.add('selected');
+            }else {
+                // Select up to the clicked segment
+                segments.forEach((s, i) => {
+                    if (i <= segmentIndex) {
+                        s.classList.add('selected');
+                    } else {
+                        s.classList.remove('selected');
+                    }
+                });
+            }
+            
+            updateSegmentText(bar);
+            updateScoreDisplay();
+        }
+
+        function updateScoreDisplay() {
+            let totalScore = 0;
+            // Sum scores from selected segments in both bars
+            document.querySelectorAll('#task-options-modal-overlay .progress-segment.selected').forEach(segment => {
+                totalScore += parseFloat(segment.dataset.value);
+            });
+
+            const scoreDisplay = document.getElementById('task-score-display');
+            scoreDisplay.textContent = totalScore;
+        }
+
+        function updateSegmentText(bar) {
+            const segments = Array.from(bar.children);
+            let cumulativeScore = 0;
+
+            // Clear all text first
+            segments.forEach(s => s.textContent = '');
+
+            // Calculate score and find last selected
+            segments.forEach(s => {
+                if (s.classList.contains('selected')) {
+                    cumulativeScore += parseFloat(s.dataset.value);
+                }
+            });
+
+            const lastSelectedIndex = segments.reduce((last, current, index) => (current.classList.contains('selected') ? index : last), -1);
+            if (lastSelectedIndex !== -1) {
+                segments[lastSelectedIndex].textContent = cumulativeScore;
+            }
+        }
+
+        function previewTaskOption(segment) {
+            const bar = segment.parentElement;
+            const segments = Array.from(bar.children);
+            const segmentIndex = segments.indexOf(segment);
+            let cumulativeScore = 0;
+
+            segments.forEach((s, i) => {
+                s.textContent = ''; // Clear previous preview text
+                if (i <= segmentIndex) {
+                    s.classList.add('preview-selected');
+                    cumulativeScore += parseFloat(s.dataset.value);
+                } else {
+                    s.classList.remove('preview-selected');
+                }
+            });
+            segment.textContent = cumulativeScore; // Show preview score on the hovered segment
+        }
+
+        function clearPreviewTaskOption(segment) {
+            const bar = segment.parentElement;
+            // Remove all preview classes from the bar
+            bar.querySelectorAll('.progress-segment').forEach(s => s.classList.remove('preview-selected'));
+            updateSegmentText(bar); // Restore text to reflect actual selection
+        }
+
+        function confirmTaskOptions() {
+            const dayData = chartData[currentTaskChild][currentTaskDay];
+            const task = dayData.tasks.find(t => t.name === currentTaskName);
+
+            if (task) {
+                let totalScore = 0;
+                const selections = [];
+                document.querySelectorAll('#task-options-modal-overlay .progress-segment.selected').forEach(segment => {
+                    const value = parseFloat(segment.dataset.value);
+                    totalScore += value;
+                    selections.push(value);
+                });
+                
+                // Handle time
+                const timeValue = document.getElementById('time-picker-input').value;
+                if (timeValue) {
+                    let [hours, minutes] = timeValue.split(':').map(num => parseInt(num));
+                    const ampm = hours >= 12 ? 'م' : 'ص';
+                    hours = parseInt(hours) % 12 || 12; // Convert to 12-hour format
+                    task.time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                } else {
+                    task.time = null;
+                }
+                
+                task.score = totalScore;
+                task.completed = totalScore > 0; // A task is 'completed' if its score is positive
+                task.selections = selections; // Save the selections
+
+                renderDayContent(currentTaskDay);
+                saveDataToLocalStorage();
+            }
+            hideTaskOptionsModal(); // Hide modal after confirming
+        }
+
+        function resetTaskOptions() {
+            const modal = document.getElementById('task-options-modal-overlay');
+            modal.querySelectorAll('.progress-segment').forEach(segment => {
+                segment.classList.remove('selected');
+                segment.textContent = '';
+            });
+            updateSegmentText(document.getElementById('green-progress-bar'));
+            updateSegmentText(document.getElementById('red-progress-bar'));
+            updateScoreDisplay();
+        }
+
+        function resetChart() {
+            if (window.confirm('⚠️ هل أنت متأكد من إعادة تعيين كامل للجدول؟ ستفقد جميع البيانات الحالية وستعود لقائمة الأطفال والمهام الافتراضية.')) {
+                children = ['فاطمة', 'زينب', 'مريم', 'محمد', 'كوثر', 'زهراء'];
+                tasks = Object.keys(TASK_ICONS); 
+                chartData = {};
+                taskApplicability = {};
+                
+                initializeData();
+                showView(currentView);
+                showCustomAlert("✨ تم إعادة تعيين الجدول بنجاح!");
+            }
+        }
+
+        function downloadChart() {
+            const dataToSave = { children, tasks, chartData };
+            const dataStr = JSON.stringify(dataToSave, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `behavior-chart-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            window.URL.revokeObjectURL(url);
+            showCustomAlert("💾 تم تحميل ملف البيانات!");
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const loadedData = JSON.parse(e.target.result);
+                    if (loadedData.children && loadedData.tasks && loadedData.chartData) {
+                        children = loadedData.children;
+                        tasks = loadedData.tasks;
+                        chartData = loadedData.chartData;
+                        taskApplicability = loadedData.taskApplicability || {};
+                        
+                        initializeData(); 
+                        showView(currentView);
+                        saveDataToLocalStorage();
+                        showCustomAlert("📂 تم تحميل بيانات الجدول بنجاح!");
+                    } else {
+                         showCustomAlert("❌ خطأ: تنسيق الملف الذي تم تحميله غير صالح.");
+                    }
+                } catch (error) {
+                     showCustomAlert('❌ خطأ في قراءة الملف: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        window.onload = function () {
+            loadDataFromLocalStorage();
+            activeDay = getCurrentDayArabic();
+            showView('daily-tracker'); 
+        }
+    </script>
+</body>
+</html>
